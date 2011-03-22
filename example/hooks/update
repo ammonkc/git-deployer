@@ -22,3 +22,39 @@
 # If you want to install hooks which will be executed rather than just
 # loaded, use ./tasks.rb deployer:install --executable or add
 # Task["deployer:install"].config[:executable] = false to your tasks.rb
+
+# === Setup === #
+# If we have everything bundled in bin, we have to put bin to the beginning of the PATH
+# variable, so all commands like rake etc will be loaded from bin, if they are in there
+export PATH="bin:$PATH" # TODO: maybe you are using script directory instead of bin?
+
+# Ruby on Rails
+export RAILS_ENV="stagging" # if you are deploying to more servers, you might want to setup this in your /etc/profile
+gem bundle --cached # this requires bundler installed on your server
+rake db:migrate
+#rake db:seed
+
+# Rango
+export RACK_ENV="stagging" # if you are deploying to more servers, you might want to setup this in your /etc/profile
+gem bundle --cached
+./tasks.rb db:autoupgrade
+#./tasks.rb db:seed
+
+# Django
+# load data from fixtures
+info "Running syncdb ..."
+python "manage.py syncdb --noinput"
+
+# Jekyll
+# point your vhost to the _site directory
+jekyll --pygments
+
+# Nanoc
+# point your vhost to the output directory
+nanoc3 compile
+
+# Restart passenger application
+info "Restarting Passenger ..."
+touch tmp/restart.txt
+
+abort "Don't forget to edit hooks/update\!"

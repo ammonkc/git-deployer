@@ -28,4 +28,28 @@
 # with the original sh, it's easy, just run ./tasks.rb deployer:compile_hook --shebang="#!/bin/zsh"
 # or add Task["deployer:compile_hook"].config[:shebang] = "#!/bin/zsh" to your tasks.rb and reinstall the hooks.
 
+# Ruby on Rails
+export RAILS_ENV="stagging" # if you are deploying to more servers, you might want to setup this in your /etc/profile
+info "Please edit config/database.yml and rerun this hook via ./tasks.rb deployer:run if you need so"
+test -f config/database.yml.sample && cp config/database.yml.sample config/database.yml
+rake db:create
 . "hooks/update"
+
+# Rango
+export RACK_ENV="stagging" # if you are deploying to more servers, you might want to setup this in your /etc/profile
+info "Please edit environments.rb and rerun this hook via ./tasks.rb deployer:run if you need so"
+test -f environments_sample.rb && cp environments_sample.rb environments.rb
+. "hooks/update"
+
+# Django
+info "Please edit settings_local.py and rerun this hook via ./tasks.rb deployer:run if you need so"
+test -f settings_local_sample.py && cp settings_local_sample.py settings_local.py
+
+# === Hints === #
+# If each branch means a subdomain, you can generate vhosts in this
+# hook. If you do so, then don't forget to restart your server!
+# git push origin alpha  => alpha.example.com
+# git push origin beta   => beta.example.com
+# git push origin master => example.com
+
+abort "Don't forget to edit hooks/clone\!"
